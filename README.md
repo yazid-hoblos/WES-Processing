@@ -5,7 +5,7 @@ This repository contains scripts for the analysis of SNP variants data from Whol
 - [ACMG Variants Filtering](#Scripts)
 - [VarSome-ClinVar Data Extraction](#Varsome-ClinVar)
 - [OMIM-DO Data Extraction](#OMIM-DO)
-- [Plots Visualization](#plots.R)
+- [Plots Visualization](#plots.Rmd)
 
 ## ACMG Variant Filtering
 The `Scripts` folder contains scripts for the processing of variants from WES files, filtering ACMG variants, quality-based filtering, variants data reshaping, and frequency calculation. Srpits for the detection of specific variants or genes in patients' files and for other purposes could be found as well. 
