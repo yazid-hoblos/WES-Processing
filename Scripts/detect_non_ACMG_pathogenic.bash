@@ -1,0 +1,9 @@
+#!/bin/bash
+
+read -p "Source Folder: " source
+read -p "Target Folder: " target
+for file in $source/*;do
+file_name=$(basename -- $file)
+id=${file_name:0: -10}
+grep -v -E "^(.*?\s){7}(APC|RET|BRCA1|BRCA2|PALB2|SDHD|SDHAF2|SDHC|SDHB|MAX|TMEM127|BMPR1A|SMAD4|TP53|MLH1|MSH2|MSH6|PMS2|MEN1|MUTYH|NF2|STK11|PTEN|RB1|TSC1|TSC2|VHL|WT1|FBN1|TGFBR1|TGFBR2|SMAD3|ACTA2|MYH11|PKP2|DSP|DSC2|TMEM43|DSG2|RYR2|CASQ2|TRDN|TNNT2|LMNA|FLNC|TTN|BAG3|DES|RBM20|TNNC1|COL3A1|LDLR|APOB|PCSK9|MYH7|MYBPC3|TNNI3|TPM1|MYL3|ACTC1|PRKAG2|MYL2|KCNQ1|KCNH2|SCN5A|BTD|GLA|OTC|GAA|HFE|ACVRL1|ENG|RYR1|CACNA1S|HNF1A|RPE65|ATP7B|TTR)\s" "$file" | grep patho | sed "s/^/$id\t/g" | sed 's/\t/,/g'  >> "$target/non_ACMG_patho.csv"
+done
