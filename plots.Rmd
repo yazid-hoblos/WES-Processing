@@ -1,0 +1,423 @@
+---
+title: "final_code"
+author: "Yazid Hoblos"
+date: "2023-10-23"
+output: html_document
+---
+
+
+```{r}
+library(ggplot2)
+library(tidyr)
+library(gridExtra)
+variants=read.csv('reduced_variants.csv')
+patho=read.csv('c_patho_variants.csv')
+patho2=read.csv('clinvar_patho.csv')
+```
+
+
+```{r}
+categories=read.csv('categories.csv')
+genes_table=read.csv('genes_table.csv')
+genes_table2=read.csv('clinvar_table.csv')
+```
+
+
+```{r}
+colors <- c("#1f77b4", "#ff7f0e", "#2ca02c", "#8c564b", "#9467bd", "#d62728")
+new_colors=c("#F8766D","#619CFF","#53B400","#C77CFF","#CD9600","#00A9FF")
+data=read.csv("data.csv")
+custom_order <- c("ACMG genes", "Varsome", "ClinVar")  # Replace with your desired order
+data$count_type <- factor(data$count_type, levels = custom_order)
+stacked_barplot=ggplot(data, aes(x = count_type, y = count, fill = categories)) +
+  geom_bar(stat = "identity", width = 0.5,linetype=1,position = "stack") +
+  geom_text(aes(label = count), position = position_stack(vjust = 0.5),color="#FFFFFF",size=3)+
+  scale_fill_manual(values = colors) +
+  labs(x = "", y = "Number of Genes") +
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.2),plot.background = element_rect(fill = "white"))+
+  scale_x_discrete(limits = custom_order)+
+  coord_cartesian(ylim = c(0, max(data$count) * 2))+
+  ggtitle("Distribution of ACMG actionable genes across disease categories")
+```
+
+
+```{r}
+stacked_barplot
+ggsave(filename = "stacked.png", plot = stacked_barplot, width = 6, height = 4, dpi = 300)
+```
+
+
+```{r}
+s=ggplot(whole_data, aes(x = DP)) +
+  geom_bar(stat = "count", color = "lightblue", alpha = 0.5) +
+  labs(title = "", x = "Depth of Coverage", y = "Number of Occurrences") +
+  theme_minimal()+
+  #annotate("text", x = 15, y = -9, label = "15", vjust = 1.5, size = 3, color="grey40")+
+  geom_segment(aes(x = 15, y = 0, xend = 15, yend = 2700), color = "grey20",linetype="dashed", size = 0.3)
+s
+ggsave(filename = "dist4.png", plot = s, width = 6, height = 4, dpi = 300)
+```
+
+```{r}
+AB=ggplot(data = whole_data, aes(x = AB)) +
+  geom_bar(stat = "count", fill = "red", color = "#FF6666", alpha = 0.1,width=0.001) +
+  labs(title = "Distribution of Frequency Counts", x = "Value", y = "Density") +
+  labs(title = "", x = "Allele Balance", y = "") +
+  theme_minimal()+
+  scale_y_log10()+
+  geom_segment(aes(x = 0.3, y = 1, xend = 0.3, yend = 100000), color = "grey20",linetype="dashed", size = 0.3)
+AB
+ggsave(filename = "AB.png", plot = AB, width = 6, height = 4, dpi = 300)
+```
+
+
+```{r}
+x=grid.arrange(s,AB,ncol=2)
+x
+ggsave(filename = "AB-DP2.png", plot = x, width = 6, height = 4, dpi = 300)
+```
+
+
+```{r}
+temp2=patho
+temp2$phenotype=''
+for (i in 1:nrow(temp2)){
+  for (j in 1:nrow(genes_table)){
+    if (genes_table$gene[j]==temp2$gene[i]){
+      temp2$phenotype[i]=genes_table[j,11]
+      if(temp2[i,ncol(temp2)]=="Cancer; Miscellaneous"){temp2$phenotype[i]="Cancer"}
+      print(temp2$phenotype[i])
+      break
+    }
+  }
+}
+
+temp2$type=''
+for (i in 1:nrow(temp2)){
+  if (grepl('fs',temp2$pHGVS[i])){
+    temp2$type[i]='Frame shift'
+  }else if (grepl('\\*',temp2$pHGVS[i])){
+    temp2$type[i]='Truncated'
+  }else if (temp2$pHGVS[i]==''){
+    temp2$type[i]='Splicing'  
+  }
+  #else if (grepl('\\?',temp2$pHGVS[i])){
+  #  temp2$type[i]='Unknown'
+  else{
+    temp2$type[i]='Missense'
+  }
+}
+```
+
+```{r}
+custom_order <- c("Cancer", "Cardiovascular", "Miscellaneous","Metabolic")  # Replace with your desired order
+temp2$phenotype <- factor(temp2$phenotype, levels = custom_order)
+```
+
+
+```{r}
+a=ggplot(temp2, aes(x = phenotype, fill = type)) +
+  geom_bar(stat = "count",position = "stack") +
+  #geom_text(aes(label = count), position = position_stack(vjust = 0.5),color="#FFFFFF",size=3.5)+
+  #scale_fill_manual(values = colors) +
+  labs(x = "Varsome", y = "Number of Variants",fill="Mutation Type")+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 25, hjust = 1))+
+  scale_fill_manual(values=c("#1f77b4", "#2ca02c", "#d62728","#9467bd"))
+ #coord_cartesian(ylim = c(0, max(data$count) * 2))+
+  ggtitle("Distribution of ACMG genes in Secondary Findings across categories")
+
+a 
+```
+
+```{r}
+temp2=patho2
+temp2$phenotype=''
+for (i in 1:nrow(temp2)){
+  for (j in 1:nrow(genes_table2)){
+    if (genes_table2$gene[j]==temp2$gene[i]){
+      temp2$phenotype[i]=genes_table2[j,11]
+      if(temp2[i,ncol(temp2)]=="Cancer; Miscellaneous"){temp2$phenotype[i]="Cancer"}
+      print(temp2$phenotype[i])
+      break
+    }
+  }
+}
+
+temp2$type=''
+for (i in 1:nrow(temp2)){
+  if (grepl('fs',temp2$pHGVS[i])){
+    temp2$type[i]='Frame shift'
+  }else if (grepl('\\*',temp2$pHGVS[i])){
+    temp2$type[i]='Truncated'
+  }else if (temp2$pHGVS[i]==''){
+    temp2$type[i]='Splicing'  
+  }
+  #else if (grepl('\\?',temp2$pHGVS[i])){
+  #  temp2$type[i]='Unknown'
+  else{
+    temp2$type[i]='Missense'
+  }
+}
+```
+
+
+```{r}
+b=ggplot(temp2, aes(x = phenotype, fill = type)) +
+  geom_bar(stat = "count",position = "stack") +
+  #geom_text(aes(label = count), position = position_stack(vjust = 0.5),color="#FFFFFF",size=3.5)+
+  #scale_fill_manual(values = colors) +
+  labs(x = "ClinVar", y = "",fill="Mutation Type")+
+  guides(fill = "none")+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 25, hjust = 1))+
+  scale_fill_manual(values=c("#1f77b4", "#2ca02c", "#d62728","#9467bd"))
+ #coord_cartesian(ylim = c(0, max(data$count) * 2))+
+  ggtitle("Distribution of ACMG genes in Secondary Findings across categories")
+
+b 
+```
+
+```{r}
+new_y_limits <- c(0,30)  # New y-axis limits
+new_y_steps <- seq(0,30, by = 5)  # Custom y-axis steps
+
+b <- b +
+  scale_y_continuous(limits = new_y_limits, breaks = new_y_steps)
+a <- a +
+  scale_y_continuous(limits = new_y_limits, breaks = new_y_steps)
+b
+a
+```
+
+
+```{r}
+library(patchwork)
+grid.arrange(b,a,ncol=2)
+merged = a + b + plot_layout(guides = "collect")
+merged
+ggsave(filename = "new_mutation_types.png", plot = merged, width = 6, height = 4, dpi = 300)
+```
+
+
+```{r}
+cancer=read.csv("cancer.csv")
+
+cancer$disease <- factor(cancer$disease, levels = c("Hereditary breast cancer", "Tuberous sclerosis complex", "Juvenile polyposis syndrome","Hereditary paraganglioma-pheochromocytoma","Lynch syndrome","Li-Fraumeni syndrome","Von Hippel-Lindau syndrome","Other"))
+
+p2=ggplot(cancer,aes(x=disease , y = numPatients, fill = disease)) +
+  geom_bar(stat = "identity") +
+  labs(
+    x = "Varsome",
+    y = "Cancer",
+    fill="Disease Phenotypes"
+  ) +
+  scale_x_discrete(breaks = NULL)+
+   scale_fill_manual(values = c(
+    "Hereditary paraganglioma-pheochromocytoma"="#E41A1C",
+    "Lynch syndrome" = "#377EB8",
+    "Hereditary breast cancer" = "#4DAF4A",
+    "Tuberous sclerosis complex" = "#984EA3",
+    "Juvenile polyposis syndrome" = "#A65628",
+     "Other" = "#1F9E89",
+    "Li-Fraumeni syndrome"="#F39C12",
+    "Von Hippel-Lindau syndrome"="#5DADE2"
+  ))+
+  theme(legend.margin = margin(t=-5))+
+  theme_minimal()
+
+p2
+
+cancer2=read.csv("cancer2.csv")
+
+#cancer2$disease[3]="Hereditary paraganglioma-pheochromocytoma"
+
+cancer2$disease <- factor(cancer2$disease, levels = c("Hereditary breast cancer", "Tuberous sclerosis complex", "Juvenile polyposis syndrome","Hereditary paraganglioma-pheochromocytoma","Lynch syndrome","Li-Fraumeni syndrome","Other"))
+
+#aes(x = reorder(disease, -numPatients, FUN = function(x) sum(x)), y = numPatients, fill = disease)
+pp2=ggplot(cancer2, aes(x=disease,y = numPatients, fill = disease)) +
+  geom_bar(stat = "identity") +
+  labs(
+    x = "ClinVar",
+    y = "",
+    fill=""
+  ) +
+  scale_x_discrete(breaks = NULL)+
+  scale_fill_manual(values = c(
+    "Hereditary paraganglioma-pheochromocytoma" = "#E41A1C",
+    "Hereditary breast cancer" = "#4DAF4A",
+    "Tuberous sclerosis complex" = "#984EA3",
+    "Juvenile polyposis syndrome" = "#A65628",
+    "Other" = "#1F9E89"
+  ))+
+  guides(fill = "none")+
+  theme_minimal()
+
+new_y_limits <- c(0,8)  # New y-axis limits
+new_y_steps <- seq(0,8, by = 2)  # Custom y-axis steps
+
+pp2 <- pp2 +
+  scale_y_continuous(limits = new_y_limits, breaks = new_y_steps)
+part1=p2+pp2+plot_layout(guides = "collect")
+part1
+```
+
+```{r}
+cardio=read.csv("cardio.csv")
+
+cardio$disease <- factor(cardio$disease, levels = c("Dilated cardiomyopathy","Familial hypercholesterolemia","Arrhythmogenic right ventricular cardiomyopathy","Marfan syndrome","Long QT syndrome types 1/2","Hypertrophic cardiomyopathy","Loeys-Dietz syndrome"))
+
+#aes(x = reorder(disease, -numPatients, FUN = function(x) sum(x))
+p3=ggplot(cardio,aes(x=disease , y = numPatients, fill = disease)) +
+  geom_bar(stat = "identity") +
+  labs(
+    x = "",
+    y = "Cardiovascular",
+    fill="Disease Phenotypes"
+  ) +
+  scale_x_discrete(breaks = NULL)+
+   scale_fill_manual(values = c(
+    "Arrhythmogenic right ventricular cardiomyopathy" = "#FF6F61",
+  "Dilated cardiomyopathy" = "#00008B",                           
+  "Familial hypercholesterolemia" = "#27AE60",                     
+  "Hypertrophic cardiomyopathy" = "#F39C12",                      
+  "Loeys-Dietz syndrome" = "#5DADE2",                            
+  "Long QT syndrome types 1/2" = "#FFC0CB",                     
+  "Marfan syndrome" = "#8E44AD"
+  ))+
+  theme_minimal()
+
+p3
+
+cardio2=read.csv("cardio2.csv")
+
+cardio2$disease <- factor(cardio2$disease, levels = c("Dilated cardiomyopathy","Familial hypercholesterolemia","Arrhythmogenic right ventricular cardiomyopathy","Marfan syndrome","Long QT syndrome types 1/2","Hypertrophic cardiomyopathy","Loeys-Dietz syndrome"))
+
+#aes(x = reorder(disease, -numPatients, FUN = function(x) sum(x)), y = numPatients, fill = disease)
+pp3=ggplot(cardio2, aes(x=disease,y = numPatients, fill = disease)) +
+  geom_bar(stat = "identity") +
+  labs(
+    x = "",
+    y = "",
+    fill=""
+  ) +
+  scale_x_discrete(breaks = NULL)+
+   scale_fill_manual(values = c(
+  "Dilated cardiomyopathy" = "#00008B",                           
+  "Familial hypercholesterolemia" = "#27AE60",    
+  "Arrhythmogenic right ventricular cardiomyopathy" = "#FF6F61",
+  "Marfan syndrome" = "#8E44AD"
+  ))+
+  guides(fill = "none")+
+  theme_minimal()
+
+new_y_limits <- c(0,16)  # New y-axis limits
+new_y_steps <- seq(0,16, by = 2)  # Custom y-axis steps
+
+pp3 <- pp3 +
+  scale_y_continuous(limits = new_y_limits, breaks = new_y_steps)
+
+p3 <- p3 +
+  scale_y_continuous(limits = new_y_limits, breaks = new_y_steps)
+
+part2=p3+pp3+plot_layout(guides = "collect")
+part2
+```
+
+```{r}
+x=part2 / part1 + plot_annotation("Number of Patients per Disease Phenotype with Dominant Inheritance") + plot_layout(guides="keep")
+x
+ggsave(filename = "AD genes.png", plot = x, width = 8, height = 7, dpi = 800)
+```
+
+
+```{r}
+AR=read.csv("AR.csv")
+AR$numPatients[4]=2
+AR$gene=factor(AR$gene,levels=c("ATP7B","MUTYH","GAA","RPE65","TRDN","HFE"))
+pAR=ggplot(AR,aes(x = gene, y = numPatients, fill = category)) +
+  geom_bar(stat = "identity") +
+  labs(
+    x = "Varsome",
+    y = "Number of Patients",
+    fill="Disease Categories"
+  )+
+  scale_fill_manual(values = c(
+  "Metabolic" = "#9467bd",                           
+  "Cardiovascular" = "#2ca02c",    
+  "Cancer" = "#1f77b4",
+  "Miscellaneous" = "#d62728"
+  ))+ theme(legend.position = "right")+
+  theme_minimal()+ theme(axis.text.x = element_text(angle = 25, hjust = 0.7))
+
+pAR
+
+AR2=read.csv("AR2.csv")
+
+AR2$gene=factor(AR2$gene,levels=c("ATP7B","MUTYH","GAA","RPE65"))
+pAR2=ggplot(AR2,aes(x=gene, y = numPatients, fill = category)) +
+  geom_bar(stat = "identity") +
+  labs(
+    x = "ClinVar",
+    y = "",
+    fill="Disease Categories"
+  ) +
+  guides(fill="none")+
+  scale_fill_manual(values = c(
+   "Metabolic" = "#9467bd",                           
+  "Cardiovascular" = "#2ca02c",    
+  "Cancer" = "#1f77b4",
+  "Miscellaneous" = "#d62728"
+  ))+
+  theme_minimal()+theme(axis.text.x = element_text(angle = 25, hjust = 0.7))
+
+pAR2
+
+new_y_limits <- c(0,8)  # New y-axis limits
+new_y_steps <- seq(0,8, by = 2)  # Custom y-axis steps
+
+pAR2 <- pAR2 +
+  scale_y_continuous(limits = new_y_limits, breaks = new_y_steps)
+
+
+p=pAR + pAR2 + plot_layout(guides="collect")
+p
+ggsave(filename = "new_AR.png", plot = p, width = 8, height = 5, dpi = 800)
+```
+
+
+```{r}
+library(gridExtra)
+disease_data <- data.frame(
+  Gene = AR$gene,
+  Disease = AR$disease 
+)
+disease_data$Disease[4]="Hereditary hemochromatosis"
+disease_data$Disease[6]="Long QT syndrome"
+table <- tableGrob(disease_data,rows=NULL,theme=ttheme_default(base_size = 9, base_colour = "black", base_family = "",
+  parse = FALSE, padding = unit(c(6, 7), "mm")))
+
+my_custom_theme <- ttheme_default(
+  base_size = 9,
+  base_colour = "black",
+  base_family = "",
+  header = list(fg_params = list(col = "white"), bg_params = list(fill = "blue")),
+  core = list(fg_params = list(col = "black"), bg_params = list(fill = "white")),
+  padding = unit(c(28, 6), "mm")
+)
+
+table <- tableGrob(disease_data, rows = NULL, theme = my_custom_theme)
+grid.arrange(table)
+```
+
+
+```{r}
+pp=p / table + theme(plot.margin = margin(r = 10, l = 10,t=5,b=5))
+pp
+ggsave(filename = "new_AR.png", plot = pp, width = 8, height = 7, dpi = 800)
+```
+
+
+
+
