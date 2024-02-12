@@ -24,6 +24,7 @@ python3 varsome_tor_accession.py variants.txt varsome_clinvar_data.csv
 ```
 ## Plots Visualization
 An R script is provided for the visualization of several plots relevant for WES secondary findings analysis.
+![stacked_updated](https://github.com/yazid-hoblos/WES-Processing/assets/125372209/fe3fe297-e66b-4da9-baf1-ec94c9ea32ee)
 
 ## OMIM-DO Data Extraction
 The `OMIM-DO` folder provides scripts for the extraction of the diseases that correspond to a given list of genes.
