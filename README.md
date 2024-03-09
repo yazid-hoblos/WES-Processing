@@ -51,7 +51,7 @@ Those associated with recessively inherited genes are highlighted below.
 
 
 ## OMIM-DO Data Extraction
-The `OMIM-DO` folder provides scripts for the extraction of the diseases that correspond to a given list of genes.
+The `OMIM-DO` folder provides scripts for the extraction of the diseases that correspond to a given list of genes, and their semantic reduction based on the Disease Ontology (DO) database.
 
 ### Usage
 ```bash
